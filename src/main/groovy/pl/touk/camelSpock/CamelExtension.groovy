@@ -1,5 +1,6 @@
 package pl.touk.camelSpock
 
+import org.apache.camel.Message
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.impl.SimpleRegistry
@@ -39,6 +40,13 @@ class CamelExtension implements IAnnotationDrivenExtension{
         ProducerTemplate producerTemplate = camelContext.createProducerTemplate()
         spec.reflection.metaClass.send = producerTemplate.&sendBody
         spec.reflection.metaClass.request = producerTemplate.&requestBody
+        spec.reflection.metaClass.requestXml = {
+            String endpoint, Object body ->
+                new XmlSlurper().parseText(request(endpoint,body,String))
+        }
+        Message.metaClass.getXml = {
+            new XmlSlurper().parseText(getBody(String))
+        }
 
     }
 

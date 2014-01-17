@@ -45,5 +45,24 @@ class CamelSpec extends Specification{
             result == "tralaa"
     }
 
+    def "Should request XML and verify GPath"() {
+        given:
+            camelMock.receiveBody("hop") >> "<a><b>tralaa</b></a>"
+        when:
+            def result = requestXml("direct:ref","hop")
+        then:
+            result.b.text() == "tralaa"
+    }
+
+    def "Should verify GPath at mock"() {
+        when:
+            send("direct:ref","<a><b>buhaha</b></a>")
+        then:
+            1 * camelMock.receive({ it.in.xml.b.text() == "buhaha"})
+    }
+
+
+
+
 
 }
