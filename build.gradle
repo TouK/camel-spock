@@ -1,4 +1,5 @@
 apply plugin: 'groovy'
+apply plugin: 'maven'
 
 repositories {
     mavenCentral()
@@ -7,4 +8,12 @@ repositories {
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.0.5', 'org.apache.camel:camel-core:2.12.1', 'org.spockframework:spock-core:0.7-groovy-2.0', 'cglib:cglib-nodep:3.1'
     testCompile 'junit:junit:4.11'
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.version = '0.1-SNAPSHOT'
+        pom.artifactId = 'camel-spock'
+        pom.groupId = 'pl.touk'
+    }
 }
