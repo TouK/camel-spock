@@ -1,5 +1,6 @@
 package pl.touk.camelSpock
 
+import org.apache.camel.ExchangePattern
 import org.apache.camel.Message
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.impl.DefaultCamelContext
@@ -38,6 +39,12 @@ class CamelExtension implements IAnnotationDrivenExtension{
 
     private void addHelperMethods(SpecInfo spec) {
         ProducerTemplate producerTemplate = camelContext.createProducerTemplate()
+        spec.reflection.metaClass.inOut = {
+            String target, Object body -> producerTemplate.send(target,ExchangePattern.InOut, new ExchangeComposer(inBody: body))
+        }
+        spec.reflection.metaClass.inOnly = {
+            String target, Object body -> producerTemplate.send(target,ExchangePattern.InOnly, new ExchangeComposer(inBody: body))
+        }
         spec.reflection.metaClass.send = producerTemplate.&send
         spec.reflection.metaClass.sendBody = producerTemplate.&sendBody
         spec.reflection.metaClass.request = producerTemplate.&request

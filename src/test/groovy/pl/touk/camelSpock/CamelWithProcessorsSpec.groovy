@@ -19,7 +19,19 @@ class CamelWithProcessorsSpec extends Specification{
 
     def "InOnly should leave message on in endpoint"() {
         when:
-            Exchange result = send("direct:ref",ExchangePattern.InOnly, new ExchangeComposer(inBody: input, outBody: null))
+            Exchange result = send("direct:ref",ExchangePattern.InOnly, new ExchangeComposer(inBody: input))
+        then:
+            result.in.body == input
+            result.out.body == output
+            1 * camelMock.receive({ it.in.body == input})
+        where:
+            input      | output
+            "tralala"  | null
+    }
+
+    def "InOnly should leave message on in endpoint -- more sugar"() {
+        when:
+            Exchange result = inOnly("direct:ref",input)
         then:
             result.in.body == input
             result.out.body == output
@@ -44,7 +56,7 @@ class CamelWithProcessorsSpec extends Specification{
         given:
             testBean.process(input) >> output
         when:
-            Exchange result = send("direct:bean",ExchangePattern.InOut, new ExchangeComposer(inBody: input, outBody: null))
+            Exchange result = send("direct:bean",ExchangePattern.InOut, new ExchangeComposer(inBody: input))
         then:
             result.in.body == input
             result.out.body == output
@@ -63,5 +75,18 @@ class CamelWithProcessorsSpec extends Specification{
         where:
             input     | output
             "tralala" | "out"
+    }
+
+    def "InOut is the same as requestBody -- more sugar"() {
+        given:
+            testBean.process(input) >> output
+        when:
+            Exchange result = inOut("direct:bean",input)
+        then:
+            result.in.body == input
+            result.out.body == output
+        where:
+            input      | output
+            "tralala"  | "out"
     }
 }
