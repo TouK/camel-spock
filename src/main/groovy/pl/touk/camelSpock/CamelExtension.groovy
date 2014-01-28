@@ -38,11 +38,13 @@ class CamelExtension implements IAnnotationDrivenExtension{
 
     private void addHelperMethods(SpecInfo spec) {
         ProducerTemplate producerTemplate = camelContext.createProducerTemplate()
-        spec.reflection.metaClass.send = producerTemplate.&sendBody
-        spec.reflection.metaClass.request = producerTemplate.&requestBody
+        spec.reflection.metaClass.send = producerTemplate.&send
+        spec.reflection.metaClass.sendBody = producerTemplate.&sendBody
+        spec.reflection.metaClass.request = producerTemplate.&request
+        spec.reflection.metaClass.requestBody = producerTemplate.&requestBody
         spec.reflection.metaClass.requestXml = {
             String endpoint, Object body ->
-                new XmlSlurper().parseText(request(endpoint,body,String))
+                new XmlSlurper().parseText(requestBody(endpoint,body,String))
         }
         Message.metaClass.getXml = {
             new XmlSlurper().parseText(getBody(String))

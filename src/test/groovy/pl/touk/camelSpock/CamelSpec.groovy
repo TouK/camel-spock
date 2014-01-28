@@ -19,7 +19,7 @@ class CamelSpec extends Specification{
         given:
             testBean.process(input) >> output
         when:
-            String result = request("direct:bean",input)
+            String result = requestBody("direct:bean",input)
         then:
             result == output
         where:
@@ -30,7 +30,7 @@ class CamelSpec extends Specification{
 
     def "Should check received at mock"() {
         when:
-            send("direct:ref","buhaha")
+            sendBody("direct:ref","buhaha")
         then:
             1 * camelMock.receive({ it.in.body == "buhaha"})
     }
@@ -40,7 +40,7 @@ class CamelSpec extends Specification{
         given:
             camelMock.receiveBody("hop") >> "tralaa"
         when:
-            String result = request("direct:ref","hop")
+            String result = requestBody("direct:ref","hop")
         then:
             result == "tralaa"
     }
@@ -56,7 +56,7 @@ class CamelSpec extends Specification{
 
     def "Should verify GPath at mock"() {
         when:
-            send("direct:ref","<a><b>buhaha</b></a>")
+            sendBody("direct:ref","<a><b>buhaha</b></a>")
         then:
             1 * camelMock.receive({ it.in.xml.b.text() == "buhaha"})
     }
