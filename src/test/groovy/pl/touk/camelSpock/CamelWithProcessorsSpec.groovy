@@ -18,28 +18,26 @@ class CamelWithProcessorsSpec extends Specification{
     CamelMock camelMock = Mock()
 
     def "InOnly should leave message on in endpoint"() {
-        given:
-            testBean.process(input) >> output
         when:
-            Exchange result = send("direct:bean",ExchangePattern.InOnly, new ExchangeComposer(inBody: input, outBody: null))
+            Exchange result = send("direct:ref",ExchangePattern.InOnly, new ExchangeComposer(inBody: input, outBody: null))
         then:
-            result.in.body == output
-            result.out.body == null
+            result.in.body == input
+            result.out.body == output
+            1 * camelMock.receive({ it.in.body == input})
         where:
             input      | output
-            "tralala"  | "out"
+            "tralala"  | null
     }
 
     def "InOnly is the same as sendBody"() {
-        given:
-            testBean.process(input) >> output
         when:
-            String result = sendBody("direct:bean", input)
+            String result = sendBody("direct:ref", input)
         then:
             result == output
+            1 * camelMock.receive({ it.in.body == input})
         where:
             input     | output
-            "tralala" | "out"
+            "tralala" | null
     }
 
     def "InOut should leave message on out endpoint"() {
