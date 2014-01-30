@@ -15,8 +15,8 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://nexus.touk.pl/nexus/content/groups/public") {
-              authentication(userName: "deployment", password: "t0ook")
+            repository(url: "http://nexus.touk.pl/nexus/content/repositories/snapshots") {
+               authentication(userName: "deployment", password: "t0ook")
             }
 
             pom.project {
