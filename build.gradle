@@ -47,4 +47,8 @@ install {
     }
 }
 
+release {
+    requireBranch = "camel-2.4"
+}
+
 createReleaseTag.dependsOn uploadArchives
