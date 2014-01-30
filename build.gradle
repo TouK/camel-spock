@@ -2,7 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 
 group = 'pl.touk'
-version = '0.1-SNAPSHOT'
+version = 'camel-2.4-0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -15,9 +15,7 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://nexus.touk.pl/nexus/content/repositories/snapshots") {
-               authentication(userName: "deployment", password: "t0ook")
-            }
+            repository(url: "http://nexus.touk.pl/nexus/content/repositories/snapshots")
 
             pom.project {
                name 'camel-spock'
@@ -30,7 +28,6 @@ uploadArchives {
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:1.6.7', 'org.apache.camel:camel-core:2.4.0', 'org.spockframework:spock-core:0.5-groovy-1.6', 'cglib:cglib-nodep:3.1'
-    testCompile 'junit:junit:4.11'
 }
 
 install {
