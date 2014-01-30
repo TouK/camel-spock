@@ -25,11 +25,3 @@ class TestBean {
     }
 
 }
-
-class LogProcessor implements Processor{
-    @Override
-    void process(Exchange exchange) throws Exception {
-        println "IN: ${exchange.in.body}"
-        println "OUT: ${exchange.out.body}"
-    }
-}

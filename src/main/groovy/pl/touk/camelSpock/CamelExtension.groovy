@@ -2,6 +2,7 @@ package pl.touk.camelSpock
 
 import org.apache.camel.ExchangePattern
 import org.apache.camel.Message
+import org.apache.camel.Processor
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.impl.SimpleRegistry
@@ -39,12 +40,15 @@ class CamelExtension implements IAnnotationDrivenExtension{
 
     private void addHelperMethods(SpecInfo spec) {
         ProducerTemplate producerTemplate = camelContext.createProducerTemplate()
-        spec.reflection.metaClass.inOut = {
-            String target, Object body -> producerTemplate.send(target,ExchangePattern.InOut, new ExchangeComposer(inBody: body))
+
+        def sendWithExchange = { ExchangePattern pattern, String target, Object body ->
+            producerTemplate.send(target,pattern, { it.in.body = body} as Processor)
         }
-        spec.reflection.metaClass.inOnly = {
-            String target, Object body -> producerTemplate.send(target,ExchangePattern.InOnly, new ExchangeComposer(inBody: body))
-        }
+
+        def parseXml = { new XmlSlurper().parseText(it) }
+
+        spec.reflection.metaClass.inOut = sendWithExchange.curry(ExchangePattern.InOut)
+        spec.reflection.metaClass.inOnly = sendWithExchange.curry(ExchangePattern.InOnly)
         spec.reflection.metaClass.send = producerTemplate.&send
         spec.reflection.metaClass.sendBody = producerTemplate.&sendBody
         spec.reflection.metaClass.request = producerTemplate.&request
@@ -61,12 +65,10 @@ class CamelExtension implements IAnnotationDrivenExtension{
 
     @Override
     void visitFeatureAnnotation(Annotation annotation, FeatureInfo feature) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     void visitFixtureAnnotation(Annotation annotation, MethodInfo fixtureMethod) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

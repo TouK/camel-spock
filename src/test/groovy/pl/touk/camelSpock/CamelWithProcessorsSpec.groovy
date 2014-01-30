@@ -19,7 +19,7 @@ class CamelWithProcessorsSpec extends Specification{
 
     def "InOnly should leave message on in endpoint"() {
         when:
-            Exchange result = send("direct:ref",ExchangePattern.InOnly, new ExchangeComposer(inBody: input))
+            Exchange result = inOut("direct:ref",input)
         then:
             result.in.body == input
             result.out.body == output
@@ -56,7 +56,7 @@ class CamelWithProcessorsSpec extends Specification{
         given:
             testBean.process(input) >> output
         when:
-            Exchange result = send("direct:bean",ExchangePattern.InOut, new ExchangeComposer(inBody: input))
+            Exchange result = inOut("direct:bean", input)
         then:
             result.in.body == input
             result.out.body == output
