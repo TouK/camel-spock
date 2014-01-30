@@ -3,7 +3,6 @@ apply plugin: 'maven'
 apply plugin: 'release'
 
 group = 'pl.touk'
-version = 'camel-2.4-0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -49,6 +48,11 @@ install {
 
 release {
     requireBranch = "camel-2.4"
+}
+
+compileGroovy {
+    sourceCompatibility = "1.5"
+    targetCompatibility = "1.5"
 }
 
 createReleaseTag.dependsOn uploadArchives
