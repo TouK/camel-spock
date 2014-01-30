@@ -1,5 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
+apply plugin: 'release'
 
 group = 'pl.touk'
 version = 'camel-2.4-0.1-SNAPSHOT'
@@ -15,8 +16,8 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://nexus.touk.pl/nexus/content/repositories/snapshots")
-
+            repository(url: "http://nexus.touk.pl/nexus/content/repositories/releases")
+            snapshotRepository(url: 'http://nexus.touk.pl/nexus/content/repositories/snapshots')
             pom.project {
                name 'camel-spock'
                packaging 'jar'
@@ -24,6 +25,16 @@ uploadArchives {
            }
         }
     }
+}
+
+buildscript {
+   repositories {
+      mavenCentral()
+      maven { url "https://oss.sonatype.org/content/groups/public"}
+   }
+   dependencies {
+      classpath 'com.github.townsfolk:gradle-release:1.2'
+   }
 }
 
 dependencies {
@@ -35,3 +46,5 @@ install {
         pom.artifactId = 'camel-spock'
     }
 }
+
+createReleaseTag.dependsOn uploadArchives
