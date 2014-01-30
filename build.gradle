@@ -1,8 +1,31 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
 
+group = 'pl.touk'
+version = '0.1-SNAPSHOT'
+
 repositories {
     mavenCentral()
+}
+
+artifacts {
+    archives jar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://nexus.touk.pl/nexus/content/groups/public") {
+              authentication(userName: "deployment", password: "t0ook")
+            }
+
+            pom.project {
+               name 'camel-spock'
+               packaging 'jar'
+               description "Framework do testowania camel'a za pomoca spock'a "
+           }
+        }
+    }
 }
 
 dependencies {
@@ -12,8 +35,6 @@ dependencies {
 
 install {
     repositories.mavenInstaller {
-        pom.version = '0.1-SNAPSHOT'
         pom.artifactId = 'camel-spock'
-        pom.groupId = 'pl.touk'
     }
 }
