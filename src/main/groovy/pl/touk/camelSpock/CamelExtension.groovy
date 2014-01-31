@@ -90,14 +90,14 @@ class CamelExtension implements IAnnotationDrivenExtension{
 
 }
 
-private class SimpleRegistryWithDefaults extends SimpleRegistry {
+class SimpleRegistryWithDefaults extends SimpleRegistry {
 
     CamelContext camelContext
     boolean resolveRefEndpoints
 
     @Override
-    def <T> T lookup(String name, Class<T> type) {
-        T obj = super.lookup(name, type)
+    def <T> T lookupByNameAndType(String name, Class<T> type) {
+        T obj = super.lookupByNameAndType(name, type)
         if (!obj && resolveRefEndpoints && org.apache.camel.Endpoint.isAssignableFrom(type)) {
             obj = camelContext.getEndpoint("direct:"+name) as T
         }
