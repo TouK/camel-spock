@@ -18,4 +18,6 @@ public @interface Context {
 
     Class<? extends RouteBuilder>[] routeBuilders() default {};
 
+    boolean resolveEndpointsToDirect() default true;
+
 }
