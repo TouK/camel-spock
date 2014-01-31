@@ -15,6 +15,9 @@ class TestRoute extends RouteBuilder {
         from("direct:bean")
             .beanRef("testBean","process");
 
+        from("ref:reference")
+               .transform(constant("bla"));
+
     }
 }
 

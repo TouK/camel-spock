@@ -2,6 +2,7 @@ package pl.touk.camelSpock
 
 import org.apache.camel.Exchange
 import org.apache.camel.ExchangePattern
+import org.apache.camel.impl.SimpleRegistry
 import pl.touk.camelSpock.annotations.Context
 import pl.touk.camelSpock.annotations.Endpoint
 import pl.touk.camelSpock.annotations.RegistryBean
@@ -16,6 +17,11 @@ class CamelWithProcessorsSpec extends Specification{
 
     @Endpoint("data")
     CamelMock camelMock = Mock()
+
+    def prepareRegistry(SimpleRegistry registry) {
+        registry["reference"] = getEndpoint("direct:reference")
+    }
+
 
     def "InOnly should leave message on in endpoint"() {
         when:

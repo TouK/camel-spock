@@ -1,5 +1,6 @@
 package pl.touk.camelSpock
 
+import org.apache.camel.CamelContext
 import org.apache.camel.ExchangePattern
 import org.apache.camel.Message
 import org.apache.camel.Processor
@@ -29,9 +30,12 @@ class CamelExtension implements IAnnotationDrivenExtension{
         context.routeBuilders().each {
             camelContext.addRoutes(it.newInstance())
         }
-        SimpleRegistry simpleRegistry = new SimpleRegistry()
+
+        SimpleRegistry simpleRegistry = new SimpleRegistryWithDefaults(camelContext: camelContext,
+                resolveRefEndpoints: context.resolveEndpointsToDirect())
+
         camelContext.registry = simpleRegistry
-        camelInterceptor = new CamelInterceptor(camelContext,simpleRegistry)
+        camelInterceptor = new CamelInterceptor(camelContext,simpleRegistry,spec)
         spec.features.each {
             it.featureMethod.addInterceptor(camelInterceptor)
         }
@@ -44,8 +48,6 @@ class CamelExtension implements IAnnotationDrivenExtension{
         def sendWithExchange = { ExchangePattern pattern, String target, Object body ->
             producerTemplate.send(target,pattern, { it.in.body = body} as Processor)
         }
-
-        def parseXml = { new XmlSlurper().parseText(it) }
 
         spec.reflection.metaClass.inOut = sendWithExchange.curry(ExchangePattern.InOut)
         spec.reflection.metaClass.inOnly = sendWithExchange.curry(ExchangePattern.InOnly)
@@ -60,6 +62,7 @@ class CamelExtension implements IAnnotationDrivenExtension{
         Message.metaClass.getXml = {
             new XmlSlurper().parseText(getBody(String))
         }
+        spec.reflection.metaClass.getEndpoint  = camelContext.&getEndpoint
 
     }
 
@@ -77,12 +80,28 @@ class CamelExtension implements IAnnotationDrivenExtension{
             camelInterceptor.fields.add(field)
         }
         if (annotation instanceof Endpoint) {
-            camelInterceptor.endpoints.add(field)
+            camelInterceptor.mockEndpoints.add(field)
         }
     }
 
     @Override
     void visitSpec(SpecInfo spec) {
+    }
+
+}
+
+private class SimpleRegistryWithDefaults extends SimpleRegistry {
+
+    CamelContext camelContext
+    boolean resolveRefEndpoints
+
+    @Override
+    def <T> T lookup(String name, Class<T> type) {
+        T obj = super.lookup(name, type)
+        if (!obj && resolveRefEndpoints && org.apache.camel.Endpoint.isAssignableFrom(type)) {
+            obj = camelContext.getEndpoint("direct:"+name) as T
+        }
+        obj
     }
 }
 
