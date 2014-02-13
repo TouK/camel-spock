@@ -83,7 +83,7 @@ class CamelInterceptor implements IMethodInterceptor{
 
     def customizeContext(Object spec) {
         Method method = spec.class.methods.find { it.name == "prepareContext" && it.parameterTypes == [CamelContext] }
-        method?.invoke(spec, simpleRegistry)
+        method?.invoke(spec, camelContext)
     }
 
 

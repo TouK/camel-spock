@@ -42,7 +42,7 @@ class CamelExtension implements IAnnotationDrivenExtension{
             camelContext.setRegistry(simpleRegistry)
         } else {
           ApplicationContext ctx = new ClassPathXmlApplicationContext(context.ctx())
-          camelContext = ctx.getBean(CamelContext)
+          camelContext = ctx.getBeansOfType(CamelContext).values().min()
           registry = camelContext.registry
         }
         camelInterceptor = new CamelInterceptor(camelContext,simpleRegistry,registry, spec)
