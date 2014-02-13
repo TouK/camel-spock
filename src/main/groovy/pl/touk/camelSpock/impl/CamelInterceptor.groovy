@@ -1,4 +1,4 @@
-package pl.touk.camelSpock
+package pl.touk.camelSpock.impl
 
 import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
@@ -6,10 +6,12 @@ import org.apache.camel.Processor
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.impl.SimpleRegistry
+import org.apache.camel.spi.Registry
 import org.spockframework.runtime.extension.IMethodInterceptor
 import org.spockframework.runtime.extension.IMethodInvocation
 import org.spockframework.runtime.model.FieldInfo
 import org.spockframework.runtime.model.SpecInfo
+import pl.touk.camelSpock.CamelMock
 import pl.touk.camelSpock.annotations.Endpoint
 import pl.touk.camelSpock.annotations.RegistryBean
 
@@ -21,13 +23,16 @@ class CamelInterceptor implements IMethodInterceptor{
 
     SpecInfo specInfo;
 
-    CamelInterceptor(DefaultCamelContext context,SimpleRegistry registry, SpecInfo spec) {
-        this.registry = registry
+    Registry registry
+
+    CamelInterceptor(DefaultCamelContext context,SimpleRegistry simpleRegistry, Registry registry, SpecInfo spec) {
+        this.simpleRegistry = simpleRegistry
         this.camelContext = context
         this.specInfo = spec
+        this.registry = registry
     }
 
-    SimpleRegistry registry;
+    SimpleRegistry simpleRegistry;
 
     List<FieldInfo> fields = []
 
@@ -39,13 +44,20 @@ class CamelInterceptor implements IMethodInterceptor{
         fields.each { field ->
             String name = field.getAnnotation(RegistryBean).value()
             if (name == "") name = field.name
-            registry[name] = field.readValue(spec)
+            if (simpleRegistry != null) {
+                simpleRegistry[name] = field.readValue(spec)
+            }
+            if (registry != null) {
+                field.writeValue(spec, registry.lookup(name))
+            }
         }
         mockEndpoints.each { endpoint ->
             String name = endpoint.getAnnotation(Endpoint).value()
             if (name == "") name = endpoint.name
             MockEndpoint mockEndpoint = camelContext.getEndpoint("mock:${name}",MockEndpoint)
-            registry[name] = mockEndpoint
+            if (simpleRegistry) {
+                simpleRegistry[name] = mockEndpoint
+            }
             //??
             CamelMock camelMock = endpoint.readValue(spec) as CamelMock
             mockEndpoint.whenAnyExchangeReceived({ Exchange ex ->
@@ -66,12 +78,12 @@ class CamelInterceptor implements IMethodInterceptor{
 
     def customizeRegistry(Object spec) {
         Method method = spec.class.methods.find { it.name == "prepareRegistry" && it.parameterTypes == [SimpleRegistry] }
-        method?.invoke(spec, registry)
+        method?.invoke(spec, simpleRegistry)
     }
 
     def customizeContext(Object spec) {
         Method method = spec.class.methods.find { it.name == "prepareContext" && it.parameterTypes == [CamelContext] }
-        method?.invoke(spec, registry)
+        method?.invoke(spec, simpleRegistry)
     }
 
 

@@ -2,7 +2,7 @@ package pl.touk.camelSpock.annotations;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.spockframework.runtime.extension.ExtensionAnnotation;
-import pl.touk.camelSpock.CamelExtension;
+import pl.touk.camelSpock.impl.CamelExtension;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
