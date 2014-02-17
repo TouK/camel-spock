@@ -54,10 +54,14 @@ class CamelInterceptor implements IMethodInterceptor{
         mockEndpoints.each { endpoint ->
             String name = endpoint.getAnnotation(Endpoint).value()
             if (name == "") name = endpoint.name
-            MockEndpoint mockEndpoint = camelContext.getEndpoint("mock:${name}",MockEndpoint)
+            MockEndpoint mockEndpoint
             if (simpleRegistry) {
+                mockEndpoint = camelContext.getEndpoint("mock:${name}",MockEndpoint)
                 simpleRegistry[name] = mockEndpoint
+            } else {
+                mockEndpoint = camelContext.getEndpoint(name, MockEndpoint)
             }
+
             //??
             CamelMock camelMock = endpoint.readValue(spec) as CamelMock
             mockEndpoint.whenAnyExchangeReceived({ Exchange ex ->
