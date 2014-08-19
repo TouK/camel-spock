@@ -53,8 +53,13 @@ class CamelExtension implements IAnnotationDrivenExtension{
         spec.reflection.metaClass.inOnly = sendWithExchange.curry(ExchangePattern.InOnly)
         spec.reflection.metaClass.send = producerTemplate.&send
         spec.reflection.metaClass.sendBody = producerTemplate.&sendBody
+        spec.reflection.metaClass.sendBodyAndHeaders = producerTemplate.&sendBodyAndHeaders
+        spec.reflection.metaClass.sendBodyAndHeader = producerTemplate.&sendBodyAndHeader
+        spec.reflection.metaClass.sendBodyAndProperty = producerTemplate.&sendBodyAndProperty
         spec.reflection.metaClass.request = producerTemplate.&request
         spec.reflection.metaClass.requestBody = producerTemplate.&requestBody
+        spec.reflection.metaClass.requestBodyAndHeader = producerTemplate.&requestBodyAndHeader
+        spec.reflection.metaClass.requestBodyAndHeaders = producerTemplate.&requestBodyAndHeaders
         spec.reflection.metaClass.requestXml = {
             String endpoint, Object body ->
                 new XmlSlurper().parseText(requestBody(endpoint,body,String))
