@@ -14,6 +14,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext
 import pl.touk.camelSpock.annotations.Context
 import pl.touk.camelSpock.annotations.Endpoint
 import pl.touk.camelSpock.annotations.RegistryBean
+import pl.touk.camelSpock.utils.SimpleRegistryWithDefaults
 
 import java.lang.annotation.Annotation
 
@@ -100,21 +101,6 @@ class CamelExtension implements IAnnotationDrivenExtension{
     void visitSpec(SpecInfo spec) {
     }
 
-}
-
-class SimpleRegistryWithDefaults extends SimpleRegistry {
-
-    CamelContext camelContext
-    boolean resolveRefEndpoints
-
-    @Override
-    def <T> T lookupByNameAndType(String name, Class<T> type) {
-        T obj = super.lookupByNameAndType(name, type)
-        if (!obj && resolveRefEndpoints && org.apache.camel.Endpoint.isAssignableFrom(type)) {
-            obj = camelContext.getEndpoint("direct:"+name) as T
-        }
-        obj
-    }
 }
 
 

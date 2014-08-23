@@ -11,7 +11,6 @@ import org.spockframework.runtime.extension.IMethodInterceptor
 import org.spockframework.runtime.extension.IMethodInvocation
 import org.spockframework.runtime.model.FieldInfo
 import org.spockframework.runtime.model.SpecInfo
-import org.spockframework.runtime.model.SpecInfo
 import pl.touk.camelSpock.CamelMock
 import pl.touk.camelSpock.annotations.Endpoint
 import pl.touk.camelSpock.annotations.RegistryBean
@@ -24,13 +23,6 @@ class CamelInterceptor implements IMethodInterceptor{
 
     SpecInfo specInfo;
 
-    CamelInterceptor(DefaultCamelContext context,SimpleRegistry simpleRegistry, Registry registry, SpecInfo spec) {
-        this.simpleRegistry = simpleRegistry
-        this.camelContext = context
-        this.specInfo = spec
-        this.registry = registry
-    }
-
     Registry registry;
 
     SimpleRegistry simpleRegistry;
@@ -39,46 +31,64 @@ class CamelInterceptor implements IMethodInterceptor{
 
     List<FieldInfo> mockEndpoints = []
 
+    CamelInterceptor(DefaultCamelContext context,SimpleRegistry simpleRegistry, Registry registry, SpecInfo spec) {
+        this.simpleRegistry = simpleRegistry
+        this.camelContext = context
+        this.specInfo = spec
+        this.registry = registry
+    }
+
     @Override
     void intercept(IMethodInvocation invocation) throws Throwable {
         Object spec = invocation.target
         fields.each { field ->
-            String name = field.getAnnotation(RegistryBean).value()
-            if (name == "") name = field.name
-            if (simpleRegistry != null) {
-                simpleRegistry[name] = field.readValue(spec)
-            }
-            if (registry != null) {
-                field.writeValue(spec, registry.lookup(name))
-            }
+            processField(spec, field)
         }
         mockEndpoints.each { endpoint ->
-            String name = endpoint.getAnnotation(Endpoint).value()
-            if (name == "") name = endpoint.name
-            MockEndpoint mockEndpoint
-            if (simpleRegistry) {
-                mockEndpoint = camelContext.getEndpoint("mock:${name}",MockEndpoint)
-                simpleRegistry[name] = mockEndpoint
-            } else {
-                mockEndpoint = camelContext.getEndpoint(name, MockEndpoint)
-            }
-
-            //??
-            CamelMock camelMock = endpoint.readValue(spec) as CamelMock
-            mockEndpoint.whenAnyExchangeReceived({ Exchange ex ->
-                camelMock.receive(ex)
-                Object ret = camelMock.receiveBody(ex.in.body)
-                if (ret != null) {
-                    ex.in.body = ret
-                }
-            } as Processor)
-
+            processMockEndpoint(spec, endpoint)
         }
         customizeContext(spec)
         customizeRegistry(spec)
         if (!camelContext.isStarted())
             camelContext.start()
         invocation.proceed()
+    }
+
+    private void processField(Object spec, FieldInfo field) {
+        String name = field.getAnnotation(RegistryBean).value()
+        if (name == "") name = field.name
+        if (simpleRegistry != null) {
+            simpleRegistry[name] = field.readValue(spec)
+        }
+        if (registry != null) {
+            field.writeValue(spec, registry.lookupByName(name))
+        }
+    }
+
+    private void processMockEndpoint(Object spec, FieldInfo endpoint) {
+        MockEndpoint mockEndpoint = retrieveMockEndpointFromField(endpoint)
+
+        CamelMock camelMock = endpoint.readValue(spec) as CamelMock
+        mockEndpoint.whenAnyExchangeReceived({ Exchange ex ->
+            camelMock.receive(ex)
+            Object ret = camelMock.receiveBody(ex.in.body)
+            if (ret != null) {
+                ex.in.body = ret
+            }
+        } as Processor)
+    }
+
+    private MockEndpoint retrieveMockEndpointFromField(FieldInfo endpoint) {
+        String name = endpoint.getAnnotation(Endpoint).value()
+        if (name == "") name = endpoint.name
+        MockEndpoint mockEndpoint
+        if (simpleRegistry) {
+            mockEndpoint = camelContext.getEndpoint("mock:${name}", MockEndpoint)
+            simpleRegistry[name] = mockEndpoint
+        } else {
+            mockEndpoint = camelContext.getEndpoint(name, MockEndpoint)
+        }
+        mockEndpoint
     }
 
     def customizeRegistry(Object spec) {

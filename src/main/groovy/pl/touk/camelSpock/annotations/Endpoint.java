@@ -12,5 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @ExtensionAnnotation(CamelExtension.class)
 public @interface Endpoint {
+
     String value() default "";
+
 }

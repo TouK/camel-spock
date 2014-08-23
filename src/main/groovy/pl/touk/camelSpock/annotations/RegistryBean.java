@@ -14,4 +14,5 @@ import java.lang.annotation.Target;
 public @interface RegistryBean {
 
     String value() default "";
+
 }
