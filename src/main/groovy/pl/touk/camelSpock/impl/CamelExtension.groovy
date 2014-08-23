@@ -1,17 +1,16 @@
-package pl.touk.camelSpock
+package pl.touk.camelSpock.impl
 
-import org.apache.camel.CamelContext
-import org.apache.camel.ExchangePattern
-import org.apache.camel.Message
-import org.apache.camel.Processor
-import org.apache.camel.ProducerTemplate
+import org.apache.camel.*
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.impl.SimpleRegistry
+import org.apache.camel.spi.Registry
 import org.spockframework.runtime.extension.IAnnotationDrivenExtension
 import org.spockframework.runtime.model.FeatureInfo
 import org.spockframework.runtime.model.FieldInfo
 import org.spockframework.runtime.model.MethodInfo
 import org.spockframework.runtime.model.SpecInfo
+import org.springframework.context.ApplicationContext
+import org.springframework.context.support.ClassPathXmlApplicationContext
 import pl.touk.camelSpock.annotations.Context
 import pl.touk.camelSpock.annotations.Endpoint
 import pl.touk.camelSpock.annotations.RegistryBean
@@ -20,22 +19,30 @@ import java.lang.annotation.Annotation
 
 class CamelExtension implements IAnnotationDrivenExtension{
 
-    DefaultCamelContext camelContext = new DefaultCamelContext();
+    CamelContext camelContext;
 
     CamelInterceptor camelInterceptor;
 
     @Override
     void visitSpecAnnotation(Annotation annotation, SpecInfo spec) {
         Context context =  annotation as Context
-        context.routeBuilders().each {
-            camelContext.addRoutes(it.newInstance())
+        SimpleRegistry simpleRegistry = null
+        Registry registry = null
+        if (context.routeBuilders().length > 0) {
+            camelContext = new DefaultCamelContext()
+            context.routeBuilders().each {
+                camelContext.addRoutes(it.newInstance())
+            }
+            simpleRegistry = new SimpleRegistryWithDefaults(camelContext: camelContext,
+                    resolveRefEndpoints: context.resolveEndpointsToDirect())
+            camelContext.setRegistry(simpleRegistry)
+        } else {
+          ApplicationContext ctx = new ClassPathXmlApplicationContext(context.ctx())
+          camelContext = ctx.getBeansOfType(CamelContext).values().min()
+          registry = camelContext.registry
         }
 
-        SimpleRegistry simpleRegistry = new SimpleRegistryWithDefaults(camelContext: camelContext,
-                resolveRefEndpoints: context.resolveEndpointsToDirect())
-
-        camelContext.registry = simpleRegistry
-        camelInterceptor = new CamelInterceptor(camelContext,simpleRegistry,spec)
+        camelInterceptor = new CamelInterceptor(camelContext,simpleRegistry,registry,spec)
         spec.features.each {
             it.featureMethod.addInterceptor(camelInterceptor)
         }

@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'release'
+//apply plugin: 'signing'
 
 group = 'pl.touk'
 
@@ -8,8 +9,20 @@ repositories {
     mavenCentral()
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
 artifacts {
     archives jar
+    archives javadocJar
+    archives sourcesJar
 }
 
 uploadArchives {
@@ -20,7 +33,7 @@ uploadArchives {
             pom.project {
                name 'camel-spock'
                packaging 'jar'
-               description "Framework do testowania camel'a za pomoca spock'a "
+               description "Library enabling easy testing of Camel routes with Spock"
            }
         }
     }
@@ -37,7 +50,13 @@ buildscript {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.0.5', 'org.apache.camel:camel-core:2.12.1', 'org.spockframework:spock-core:0.7-groovy-2.0', 'cglib:cglib-nodep:3.1'
+    compile 'org.codehaus.groovy:groovy-all:2.0.5',
+            'org.apache.camel:camel-core:2.13.2',
+            'org.apache.camel:camel-spring:2.13.2',
+            'org.spockframework:spock-core:0.7-groovy-2.0',
+            'cglib:cglib-nodep:3.1',
+            'org.springframework:spring-core:4.0.6.RELEASE',
+            'org.springframework:spring-context:4.0.6.RELEASE'
 }
 
 install {
@@ -46,4 +65,10 @@ install {
     }
 }
 
+
+
+/*signing {
+    sign configurations.archives
+}
+  */
 createReleaseTag.dependsOn uploadArchives
