@@ -8,7 +8,6 @@ import spock.lang.Specification
 @Context(routeBuilders = [TestRoute])
 class CamelSpec extends Specification{
 
-
     @RegistryBean("testBean")
     TestBean testBean = Mock()
 
