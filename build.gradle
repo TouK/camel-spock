@@ -5,6 +5,8 @@ apply plugin: 'release'
 
 group = 'pl.touk'
 
+ext.camelVersion = '2.13.2'
+
 repositories {
     mavenCentral()
 }
@@ -31,30 +33,58 @@ uploadArchives {
             repository(url: "http://nexus.touk.pl/nexus/content/repositories/releases")
             snapshotRepository(url: 'http://nexus.touk.pl/nexus/content/repositories/snapshots')
             pom.project {
-               name 'camel-spock'
-               packaging 'jar'
-               description "Library enabling easy testing of Camel routes with Spock"
-           }
+                name 'camel-spock'
+                packaging 'jar'
+                description "Library enabling easy testing of Camel routes with Spock"
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+            }
         }
     }
 }
 
+task writeNewPom << {
+    pom {
+        project {
+            groupId 'org.example'
+            artifactId 'test'
+            version '1.0.0'
+
+            inceptionYear '2008'
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+        }
+    }.writeTo("$buildDir/pom.xml")
+}
+
 buildscript {
-   repositories {
-      mavenCentral()
-      maven { url "https://oss.sonatype.org/content/groups/public"}
-   }
-   dependencies {
-      classpath 'com.github.townsfolk:gradle-release:1.2'
-   }
+    repositories {
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/groups/public" }
+    }
+    dependencies {
+        classpath 'com.github.townsfolk:gradle-release:1.2'
+    }
 }
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.0.5',
-            'org.apache.camel:camel-spring:2.13.2',
+            "org.apache.camel:camel-spring:${camelVersion}",
             'org.spockframework:spock-core:0.7-groovy-2.0',
             'cglib:cglib-nodep:3.1',
             'org.springframework:spring-context:4.0.6.RELEASE'
+    testCompile "org.apache.camel:camel-http:${camelVersion}",
+            "org.apache.camel:camel-jetty:${camelVersion}"
 }
 
 install {
@@ -62,8 +92,6 @@ install {
         pom.artifactId = 'camel-spock'
     }
 }
-
-
 
 /*signing {
     sign configurations.archives

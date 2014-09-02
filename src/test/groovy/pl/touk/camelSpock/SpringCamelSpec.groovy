@@ -8,7 +8,7 @@ import spock.lang.Specification
 @Context(ctx = ["testContext.xml"])
 class SpringCamelSpec extends Specification{
 
-    @Endpoint("mock:testService")
+    @Endpoint("testService")
     CamelMock testService = Mock()
 
     @RegistryBean("testBean")

@@ -5,8 +5,10 @@ import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
+import org.apache.camel.impl.InterceptSendToMockEndpointStrategy
 import org.apache.camel.impl.SimpleRegistry
 import org.apache.camel.spi.Registry
+import org.apache.camel.util.ObjectHelper
 import org.spockframework.runtime.extension.IMethodInterceptor
 import org.spockframework.runtime.extension.IMethodInvocation
 import org.spockframework.runtime.model.FieldInfo
@@ -17,7 +19,7 @@ import pl.touk.camelSpock.annotations.RegistryBean
 
 import java.lang.reflect.Method
 
-class CamelInterceptor implements IMethodInterceptor{
+class CamelInterceptor implements IMethodInterceptor {
 
     DefaultCamelContext camelContext;
 
@@ -81,14 +83,29 @@ class CamelInterceptor implements IMethodInterceptor{
     private MockEndpoint retrieveMockEndpointFromField(FieldInfo endpoint) {
         String name = endpoint.getAnnotation(Endpoint).value()
         if (name == "") name = endpoint.name
-        MockEndpoint mockEndpoint
-        if (simpleRegistry) {
-            mockEndpoint = camelContext.getEndpoint("mock:${name}", MockEndpoint)
+        String key = prepareMockKey(name)
+        MockEndpoint mockEndpoint = camelContext.getEndpoint(key, MockEndpoint)
+        if (name.contains(":")) {
+            String pattern = name.contains('?') ? ObjectHelper.before(name, "?") : name
+            camelContext.addRegisterEndpointCallback(new InterceptSendToMockEndpointStrategy(pattern+"*", true))
+
+        }
+        if (simpleRegistry != null) {
             simpleRegistry[name] = mockEndpoint
-        } else {
-            mockEndpoint = camelContext.getEndpoint(name, MockEndpoint)
         }
         mockEndpoint
+    }
+
+    /**
+     * @see InterceptSendToMockEndpointStrategy.registerEndpoint
+     */
+    private String prepareMockKey(String name) {
+        String key = "mock:" + name.replaceFirst("://", ":");
+        // strip off parameters as well
+        if (key.contains("?")) {
+            key = ObjectHelper.before(key, "?");
+        }
+        key
     }
 
     def customizeRegistry(Object spec) {
@@ -98,7 +115,7 @@ class CamelInterceptor implements IMethodInterceptor{
 
     def customizeContext(Object spec) {
         Method method = spec.class.methods.find { it.name == "prepareContext" && it.parameterTypes == [CamelContext] }
-        method?.invoke(spec, simpleRegistry)
+        method?.invoke(spec, camelContext)
     }
 
 
